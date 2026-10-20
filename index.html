@@ -1,292 +1,207 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>CosmicTouch - Explore the Universe</title>
-<style>
-:root {
-  --bg: #081020;
-  --panel: #172341;
-  --text: #ffffff;
-  --accent: #8ce7ff;
-}
-* { box-sizing: border-box; }
-body {
-  margin: 0;
-  font: 17px/1.6 Arial, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-}
-header {
-  text-align: center;
-  padding: 25px 12px;
-  background: linear-gradient(135deg,#172d5b,#47235e);
-}
-header h1 { color: var(--accent); margin: 0; }
-nav {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px;
-  background: #10172c;
-}
-button, select {
-  font: inherit;
-  padding: 10px 13px;
-  border: 2px solid var(--accent);
-  border-radius: 12px;
-  background: var(--panel);
-  color: var(--text);
-}
-button { cursor: pointer; }
-button:focus, select:focus {
-  outline: 3px solid yellow;
-}
-main {
-  width: min(950px, calc(100% - 24px));
-  margin: 20px auto;
-}
-.panel {
-  background: var(--panel);
-  padding: 18px;
-  border-radius: 16px;
-  margin-bottom: 18px;
-}
-h2, h3 { color: var(--accent); }
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2,minmax(0,1fr));
-  gap: 12px;
-}
-.planet {
-  min-height: 145px;
-  text-align: center;
-  background: #243251;
-  color: white;
-}
-.orb {
-  width: 64px;
-  height: 64px;
-  margin: 0 auto 8px;
-  border-radius: 50%;
-  box-shadow: inset -12px -8px 18px #0008;
-}
-.mercury { background: #aaa9a5; }
-.venus { background: #dfb474; }
-.earth { background: linear-gradient(135deg,#168fe5 45%,#43bd72 46%); }
-.mars { background: #d75c43; }
-.jupiter { background: repeating-linear-gradient(0deg,#d9ad82 0 8px,#93684c 9px 14px); }
-.saturn { background: #e5d09b; }
-.uranus { background: #83dcdf; }
-.neptune { background: #416cf2; }
-.fact {
-  padding: 10px;
-  margin: 8px 0;
-  background: #243251;
-  border-radius: 10px;
-}
-.hidden { display: none !important; }
-label { display: block; margin: 10px 0; }
-select { width: 100%; }
-input[type=checkbox] { width: 20px; height: 20px; }
-.answer {
-  display: block;
-  width: 100%;
-  text-align: left;
-  margin: 8px 0;
-}
-.large { font-size: 23px; }
-.contrast {
-  --bg: #000;
-  --panel: #000;
-  --text: #fff;
-  --accent: #ff0;
-}
-footer { text-align: center; padding: 20px; }
-@media(min-width:650px) {
-  .grid { grid-template-columns: repeat(4,minmax(0,1fr)); }
-}
-</style>
+<meta name="description" content="CosmicTouch lets you explore the solar system through sight, sound and discovery. Poke the planets, compare them, take the quiz. Made by team Ruby.">
+<meta name="author" content="team Ruby">
+<meta name="theme-color" content="#f3effd">
+<meta property="og:title" content="CosmicTouch - Explore the Universe">
+<meta property="og:description" content="Explore space through sight, sound and discovery. Made by team Ruby.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cellipse cx='32' cy='32' rx='30' ry='9' fill='%23cfff00' stroke='%230a0030' stroke-width='4' transform='rotate(-18 32 32)'/%3E%3Ccircle cx='32' cy='32' r='19' fill='%239457eb' stroke='%230a0030' stroke-width='5'/%3E%3Cpath d='M10 40q22 12 44-14' fill='none' stroke='%23cfff00' stroke-width='5' stroke-linecap='round' transform='rotate(-18 32 32)'/%3E%3C/svg%3E">
+<link rel="preload" href="assets/fonts/bricolage-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/styles.css">
+<script>
+/* apply saved theme + motion settings before first paint so nothing flashes */
+try {
+  var s = JSON.parse(localStorage.getItem("ct.settings") || "{}"), d = document.documentElement;
+  d.dataset.theme = s.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  if (s.large) d.dataset.large = "";
+  if (s.contrast) d.dataset.contrast = "";
+  if (s.calm === true || (s.calm == null && matchMedia("(prefers-reduced-motion: reduce)").matches)) d.dataset.calm = "";
+} catch (e) { document.documentElement.dataset.theme = "light"; }
+</script>
 </head>
 <body>
-<header>
-  <h1>🌌 CosmicTouch</h1>
-  <p>Explore space through sight, sound and discovery.</p>
-</header>
-<nav aria-label="Main menu">
-  <button onclick="page('explore')">Explore</button>
-  <button onclick="page('compare')">Compare</button>
-  <button onclick="page('quiz')">Quiz</button>
-  <button onclick="page('favorites')">Favorites ⭐</button>
-  <button onclick="page('access')">Accessibility</button>
-</nav>
-<main>
-<section id="explore" class="panel screen">
-  <h2>Choose a planet</h2>
-  <p>Tap a planet to explore its facts.</p>
-  <div id="grid" class="grid"></div>
-</section>
-<section id="details" class="panel screen hidden">
-  <button onclick="page('explore')">← All planets</button>
-  <div id="details-content"></div>
-  <button id="read">🔊 Read aloud</button>
-  <button onclick="stopAudio()">⏹ Stop audio</button>
-  <button id="fav">⭐ Add favorite</button>
-  <button onclick="move(-1)">← Previous</button>
-  <button onclick="move(1)">Next →</button>
-</section>
-<section id="compare" class="panel screen hidden">
-  <h2>Compare planets</h2>
-  <label for="a">First planet</label><select id="a"></select>
-  <label for="b">Second planet</label><select id="b"></select>
-  <button onclick="compare()">Compare</button>
-  <div id="result" aria-live="polite"></div>
-</section>
-<section id="quiz" class="panel screen hidden">
-  <h2>Space quiz 🧠</h2>
-  <p id="progress"></p><h3 id="question"></h3>
-  <div id="answers"></div>
-  <p id="feedback" aria-live="polite"></p>
-  <button id="next" class="hidden" onclick="next()">Next question</button>
-  <p id="score"></p>
-</section>
-<section id="favorites" class="panel screen hidden">
-  <h2>My favorite planets</h2><div id="favlist"></div>
-</section>
-<section id="access" class="panel screen hidden">
-  <h2>Accessibility</h2>
-  <label><input id="big" type="checkbox" onchange="document.body.classList.toggle('large',this.checked)"> Larger text</label>
-  <label><input id="hc" type="checkbox" onchange="document.body.classList.toggle('contrast',this.checked)"> High contrast</label>
-  <button onclick="speak('Welcome to CosmicTouch. Choose a planet to explore.')">🔊 Hear welcome</button>
-  <button onclick="stopAudio()">Stop audio</button>
-</section>
-</main>
-<footer>CosmicTouch — The universe is for everyone. 🌎</footer>
-<script>
-const planets = [
- {n:"Mercury",c:"mercury",d:4879,y:88,r:57.9,t:167,f:"Mercury is the smallest planet and closest to the Sun.",x:"Its rocky surface is covered with craters."},
- {n:"Venus",c:"venus",d:12104,y:225,r:108.2,t:464,f:"Venus is the hottest planet.",x:"Its thick atmosphere traps heat."},
- {n:"Earth",c:"earth",d:12742,y:365,r:149.6,t:15,f:"Earth is our home and the only world currently known to support life.",x:"Liquid water covers most of its surface."},
- {n:"Mars",c:"mars",d:6779,y:687,r:227.9,t:-65,f:"Mars is known as the Red Planet.",x:"Iron-rich dust gives it a reddish appearance."},
- {n:"Jupiter",c:"jupiter",d:139820,y:4333,r:778.6,t:-110,f:"Jupiter is the largest planet.",x:"It has enormous storms, including the Great Red Spot."},
- {n:"Saturn",c:"saturn",d:116460,y:10759,r:1433.5,t:-140,f:"Saturn is famous for its rings.",x:"Its rings contain countless pieces of ice and rock."},
- {n:"Uranus",c:"uranus",d:50724,y:30687,r:2872.5,t:-195,f:"Uranus rotates on its side.",x:"Methane in its atmosphere helps give it a blue-green color."},
- {n:"Neptune",c:"neptune",d:49244,y:60190,r:4495.1,t:-200,f:"Neptune is the most distant planet from the Sun.",x:"It is an ice giant with extremely fast winds."}
-];
-let current=0, favorites=[], questions=[], qi=0, points=0, answered=false;
-const $=id=>document.getElementById(id);
+<a class="skip" href="#main-content">skip to content</a>
 
-function page(id){
- document.querySelectorAll(".screen").forEach(s=>s.classList.add("hidden"));
- $(id).classList.remove("hidden");
- if(id==="favorites") showFavorites();
- if(id==="quiz"&&!questions.length) startQuiz();
- window.scrollTo(0,0);
-}
-function openPlanet(i){
- current=i;
- const p=planets[i], area=$("details-content");
- area.replaceChildren();
- const orb=document.createElement("div"); orb.className="orb "+p.c;
- const title=document.createElement("h2"); title.textContent=p.n;
- area.append(orb,title);
- [[p.f],[p.x],
- ["Diameter: "+p.d.toLocaleString()+" km"],
- ["Year: "+p.y.toLocaleString()+" Earth days"],
- ["Average distance from Sun: "+p.r+" million km"],
- ["Approximate average temperature: "+p.t+" °C"]].forEach(a=>{
-  const el=document.createElement("p"); el.className="fact"; el.textContent=a[0]; area.append(el);
- });
- $("fav").textContent=favorites.includes(p.n)?"⭐ Remove favorite":"⭐ Add favorite";
- page("details");
-}
-planets.forEach((p,i)=>{
- const button=document.createElement("button"); button.className="planet";
- const orb=document.createElement("div"); orb.className="orb "+p.c;
- const name=document.createElement("strong"); name.textContent=p.n;
- const label=document.createElement("p"); label.textContent="Tap to explore";
- button.append(orb,name,label);
- button.setAttribute("aria-label","Explore "+p.n);
- button.onclick=()=>openPlanet(i); $("grid").append(button);
- ["a","b"].forEach(id=>{
-  const opt=document.createElement("option"); opt.value=i; opt.textContent=p.n; $(id).append(opt);
- });
-});
-$("b").value="1";
-$("read").onclick=()=>{
- const p=planets[current]; speak(p.n+". "+p.f+" "+p.x);
-};
-$("fav").onclick=()=>{
- const n=planets[current].n;
- favorites=favorites.includes(n)?favorites.filter(x=>x!==n):[...favorites,n];
- $("fav").textContent=favorites.includes(n)?"⭐ Remove favorite":"⭐ Add favorite";
-};
-function move(d){openPlanet((current+d+8)%8);}
-function speak(text){
- if(!("speechSynthesis" in window)){alert("Audio reading is unavailable in this browser.");return;}
- stopAudio(); speechSynthesis.speak(new SpeechSynthesisUtterance(text));
-}
-function stopAudio(){if("speechSynthesis" in window)speechSynthesis.cancel();}
-function showFavorites(){
- $("favlist").replaceChildren();
- if(!favorites.length){$("favlist").textContent="No favorites yet. Save a planet first.";return;}
- favorites.forEach(n=>{
-  const b=document.createElement("button"); b.textContent="⭐ "+n;
-  b.onclick=()=>openPlanet(planets.findIndex(p=>p.n===n)); $("favlist").append(b);
- });
-}
-function compare(){
- const a=planets[+$("a").value],b=planets[+$("b").value];
- $("result").textContent=`${a.n}: ${a.d.toLocaleString()} km diameter; ${a.y.toLocaleString()} Earth days per year. ${b.n}: ${b.d.toLocaleString()} km diameter; ${b.y.toLocaleString()} Earth days per year. `+(a.d===b.d?"They have equal diameters.":(a.d>b.d?a.n:b.n)+" is larger.");
-}
-const bank=[
- ["Which planet is closest to the Sun?",["Earth","Mercury","Mars","Neptune"],1],
- ["Which planet is hottest?",["Venus","Mars","Jupiter","Uranus"],0],
- ["Which planet is our home?",["Saturn","Venus","Earth","Mercury"],2],
- ["Which planet is called the Red Planet?",["Neptune","Mars","Uranus","Venus"],1],
- ["Which planet is largest?",["Earth","Saturn","Jupiter","Neptune"],2],
- ["Which planet has famous rings?",["Saturn","Mercury","Mars","Earth"],0],
- ["Which planet rotates on its side?",["Venus","Uranus","Jupiter","Mars"],1],
- ["Which planet is farthest from the Sun?",["Saturn","Earth","Neptune","Mercury"],2],
- ["How many planets are in our solar system?",["7","8","9","10"],1],
- ["Which planet is our nearest planetary neighbor in this list?",["Mars","Jupiter","Neptune","Saturn"],0]
-];
-function startQuiz(){
- questions=[...bank].sort(()=>Math.random()-.5);qi=0;points=0;renderQuestion();
-}
-function renderQuestion(){
- answered=false; const q=questions[qi];
- $("progress").textContent=`Question ${qi+1} of ${questions.length}`;
- $("question").textContent=q[0]; $("feedback").textContent=""; $("score").textContent="";
- $("next").classList.add("hidden"); $("next").textContent="Next question";
- $("answers").replaceChildren();
- q[1].forEach((answer,i)=>{
-  const b=document.createElement("button"); b.className="answer";b.textContent=answer;
-  b.onclick=()=>answerQuestion(i);$("answers").append(b);
- });
-}
-function answerQuestion(i){
- if(answered)return;answered=true;const q=questions[qi];
- if(i===q[2]){points++;$("feedback").textContent="Correct! Great space knowledge!";}
- else $("feedback").textContent="The correct answer is "+q[1][q[2]]+".";
- $("answers").querySelectorAll("button").forEach(b=>b.disabled=true);
- $("next").textContent=qi===questions.length-1?"See results":"Next question";
- $("next").classList.remove("hidden");
-}
-function next(){
- if(qi<questions.length-1){qi++;renderQuestion();return;}
- if($("next").textContent==="Play again"){startQuiz();return;}
- $("question").textContent="Quiz complete!";
- $("answers").replaceChildren();$("progress").textContent="Finished";
- $("feedback").textContent=`You scored ${points} out of ${questions.length}.`;
- $("score").textContent=points===questions.length?"Perfect score!":"Keep exploring and try again!";
- $("next").textContent="Play again";
-}
-$("next").addEventListener("click",next);
-$("welcome-button").onclick=()=>speak("Welcome to CosmicTouch. Choose a planet to explore.");
-</script>
+<div class="scenery" aria-hidden="true">
+  <div class="stars" id="stars"></div>
+  <i class="gb gb-a tone-yellow"></i>
+  <i class="gb gb-b tone-lime"></i>
+  <i class="gb gb-c tone-teal"></i>
+  <i class="gb gb-d tone-orange"></i>
+  <i class="gb gb-e tone-violet"></i>
+</div>
+
+<header class="top">
+  <a class="brand" href="#/explore" aria-label="CosmicTouch, home">
+    <span class="brand-mark" id="brand-mark" aria-hidden="true"></span>
+    <span class="brand-name">CosmicTouch</span>
+  </a>
+  <div class="tools" role="group" aria-label="Quick settings">
+    <button type="button" class="round" id="t-theme" aria-pressed="false" aria-label="Night mode" title="Night mode"></button>
+    <button type="button" class="round" id="t-sound" aria-pressed="true" aria-label="Sound effects" title="Sound effects"></button>
+    <button type="button" class="round" id="t-calm" aria-pressed="false" aria-label="Calm motion" title="Calm motion (pause the movement)"></button>
+  </div>
+</header>
+
+<nav class="menu" aria-label="Main menu">
+  <a class="navlink" href="#/explore" data-route="explore"><span data-ico="explore"></span><span class="nl">explore</span></a>
+  <a class="navlink" href="#/compare" data-route="compare"><span data-ico="compare"></span><span class="nl">compare</span></a>
+  <a class="navlink" href="#/quiz" data-route="quiz"><span data-ico="quiz"></span><span class="nl">quiz</span></a>
+  <a class="navlink" href="#/favorites" data-route="favorites"><span data-ico="star"></span><span class="nl">favorites</span></a>
+  <a class="navlink" href="#/access" data-route="access"><span data-ico="access"></span><span class="nl">accessibility</span></a>
+</nav>
+
+<main id="main-content" tabindex="-1">
+  <noscript>
+    <div class="card" style="margin-top:24px">
+      <h1 class="headline">CosmicTouch needs <mark class="marker">JavaScript</mark></h1>
+      <p>Turn JavaScript on in your browser and reload to explore the planets.</p>
+    </div>
+  </noscript>
+
+  <!-- explore -->
+  <section id="explore" class="screen" aria-labelledby="explore-title">
+    <div class="hero">
+      <h1 id="explore-title" class="display" tabindex="-1">Explore space through <mark class="marker">sight, sound and discovery</mark>.</h1>
+      <p class="lead">tap a planet. hear it talk. squish it. save the ones you love.</p>
+      <div class="row center">
+        <button type="button" class="btn" id="go-planets">start exploring</button>
+        <a class="btn cream" href="#/quiz">take the quiz</a>
+      </div>
+    </div>
+
+    <div class="field-wrap">
+      <div id="field" class="field" aria-hidden="true"></div>
+      <div class="field-tools">
+        <button type="button" class="chip toggle" id="gravity" aria-pressed="false"><span data-ico="down"></span><span id="gravity-text">gravity: off</span></button>
+        <span class="chip tone-yellow" id="popped" aria-hidden="true">popped 0</span>
+        <span class="field-hint">poke them. they grow back.</span>
+      </div>
+    </div>
+
+    <div id="planets" class="block">
+      <h2 class="headline">Choose a <mark class="marker">planet</mark></h2>
+      <p class="lead">Tap a planet to explore its facts.</p>
+      <div id="grid" class="grid"></div>
+    </div>
+
+    <section class="card tone-violet orrery-card" aria-labelledby="orrery-title">
+      <div class="orrery-head">
+        <h2 id="orrery-title" class="shout shout-md">The whole family</h2>
+        <span class="chip tone-cream">not to scale</span>
+      </div>
+      <div class="orrery" id="orrery" role="img" aria-label="An animated, not-to-scale picture of the eight planets going around the Sun. Use the planet cards above to open a planet."></div>
+      <div class="orrery-controls">
+        <div class="speed" role="group" aria-label="Orbit speed">
+          <button type="button" class="chip toggle" data-speed="0" aria-pressed="false"><span data-ico="pause"></span>pause</button>
+          <button type="button" class="chip toggle" data-speed="1" aria-pressed="true">1x</button>
+          <button type="button" class="chip toggle" data-speed="5" aria-pressed="false">5x</button>
+          <button type="button" class="chip toggle" data-speed="20" aria-pressed="false">20x</button>
+        </div>
+        <p class="note">tap a planet to visit it.</p>
+      </div>
+    </section>
+  </section>
+
+  <!-- planet details -->
+  <section id="details" class="screen" aria-labelledby="details-title" hidden>
+    <div class="pd-top">
+      <a class="btn cream sm" href="#/explore"><span data-ico="back"></span>all planets</a>
+    </div>
+    <div id="details-content"></div>
+  </section>
+
+  <!-- compare -->
+  <section id="compare" class="screen" aria-labelledby="compare-title" hidden>
+    <h1 id="compare-title" class="headline" tabindex="-1">Compare <mark class="marker">planets</mark></h1>
+    <p class="lead">pick two worlds and watch them square up.</p>
+    <div class="card compare-form">
+      <div class="pick">
+        <label for="a">First planet</label>
+        <select id="a"></select>
+      </div>
+      <button type="button" class="chip toggle swap" id="swap" aria-label="Swap the two planets"><span data-ico="swap"></span><span>swap</span></button>
+      <div class="pick">
+        <label for="b">Second planet</label>
+        <select id="b"></select>
+      </div>
+      <button type="button" class="btn" id="compare-btn">compare</button>
+    </div>
+    <p id="result" class="sentence" aria-live="polite"></p>
+    <div id="compare-out"></div>
+  </section>
+
+  <!-- quiz -->
+  <section id="quiz" class="screen" aria-labelledby="quiz-title" hidden>
+    <h1 id="quiz-title" class="headline" tabindex="-1">Space <mark class="marker">quiz</mark></h1>
+    <div class="quiz-grid">
+      <div class="card quiz-card">
+        <div class="bar progress-bar" id="progress-bar"><div class="fill tone-violet" id="progress-fill"></div><p class="bar-label" id="progress"></p></div>
+        <h2 id="question" class="quiz-q"></h2>
+        <div id="answers" class="opts"></div>
+        <p id="feedback" class="feedback" aria-live="polite"></p>
+        <div class="row">
+          <button type="button" id="next" class="btn" hidden>next question</button>
+        </div>
+        <p id="score" class="score"></p>
+      </div>
+      <div class="jar-col">
+        <div class="jar-wrap" id="jar-wrap" role="img" aria-label="Score jar: 0 correct answers so far">
+          <svg class="jar-text" viewBox="-150 -150 300 300" aria-hidden="true" focusable="false">
+            <defs>
+              <path id="arc-top" d="M -126 0 A 126 126 0 0 1 126 0"/>
+              <path id="arc-bot" d="M -138 0 A 138 138 0 0 0 138 0"/>
+            </defs>
+            <text><textPath href="#arc-top" startOffset="50%" text-anchor="middle">your score jar</textPath></text>
+            <text><textPath href="#arc-bot" startOffset="50%" text-anchor="middle" id="jar-caption">0 of 10 right</textPath></text>
+          </svg>
+          <div class="jar" id="jar"></div>
+        </div>
+        <p class="chip tone-yellow streak" id="streak" aria-live="off">streak 0</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- favorites -->
+  <section id="favorites" class="screen" aria-labelledby="favorites-title" hidden>
+    <h1 id="favorites-title" class="headline" tabindex="-1">My favorite <mark class="marker">planets</mark></h1>
+    <div id="favlist" class="favlist"></div>
+  </section>
+
+  <!-- accessibility -->
+  <section id="access" class="screen" aria-labelledby="access-title" hidden>
+    <h1 id="access-title" class="headline" tabindex="-1"><mark class="marker">Accessibility</mark></h1>
+    <p class="lead">make cosmictouch work the way you do. we remember your choices.</p>
+    <div class="card switches">
+      <label class="switch"><input id="big" type="checkbox"><span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span><span class="sw-text">Larger text</span></label>
+      <label class="switch"><input id="hc" type="checkbox"><span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span><span class="sw-text">High contrast</span></label>
+      <label class="switch"><input id="night" type="checkbox"><span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span><span class="sw-text">Night mode</span></label>
+      <label class="switch"><input id="calm" type="checkbox"><span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span><span class="sw-text">Calm motion <small>(no floating, bouncing or confetti)</small></span></label>
+      <label class="switch"><input id="sfx" type="checkbox"><span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span><span class="sw-text">Sound effects</span></label>
+    </div>
+    <div class="row access-actions">
+      <button type="button" class="btn" id="welcome-button"><span data-ico="sound"></span>hear welcome</button>
+      <button type="button" class="btn cream" id="stop-audio"><span data-ico="stop"></span>stop audio</button>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <p class="foot-line">CosmicTouch — The universe is for everyone.</p>
+  <p class="credit"><span class="chip tone-orange"><span data-ico="gem"></span>made by team Ruby</span></p>
+</footer>
+
+<div id="toasts" class="toasts" role="status" aria-live="polite"></div>
+<canvas id="fx" class="fx" aria-hidden="true"></canvas>
+
+<script src="assets/data.js"></script>
+<script src="assets/art.js"></script>
+<script src="assets/fx.js"></script>
+<script src="assets/app.js"></script>
 </body>
 </html>
